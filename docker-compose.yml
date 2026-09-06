@@ -6,7 +6,7 @@ services:
       POSTGRES_USER: resumeai
       POSTGRES_PASSWORD: changeme
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - resumeai_db_data:/var/lib/postgresql/data
 

@@ -288,3 +288,21 @@ export async function downloadExport(documentId: string, format: 'pdf' | 'docx')
   a.remove()
   URL.revokeObjectURL(url)
 }
+
+export function verifyEmail(token: string) {
+  return request<void>(`/auth/verify-email?token=${encodeURIComponent(token)}`)
+}
+
+export function requestPasswordReset(email: string) {
+  return request<void>('/auth/request-password-reset', {
+    method: 'POST',
+    body: JSON.stringify({ email })
+  })
+}
+
+export function resetPassword(token: string, newPassword: string) {
+  return request<void>('/auth/reset-password', {
+    method: 'POST',
+    body: JSON.stringify({ token, newPassword })
+  })
+}

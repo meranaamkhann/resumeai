@@ -1,8 +1,10 @@
 package com.resumeai.service.ocr;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 @Service
+@ConditionalOnProperty(prefix = "app.ocr", name = "provider", havingValue = "none", matchIfMissing = true)
 public class NoopOcrService implements OcrService {
 
     @Override

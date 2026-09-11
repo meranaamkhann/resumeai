@@ -19,7 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.locks.ReentrantLock;
 
 @Service
 public class AnalysisService {
@@ -27,7 +26,7 @@ public class AnalysisService {
     private final ResumeUploadService resumeUploadService;
     private final ScoringEngine scoringEngine;
     private final ResumeAnalysisRepository analysisRepository;
-    private final DocumentProcessingLockRegistry lockRegistry;
+    private final AdvisoryLockService advisoryLockService;
     private final UsageService usageService;
     private final UserRepository userRepository;
     private final AnalyticsService analyticsService;
@@ -36,14 +35,14 @@ public class AnalysisService {
     public AnalysisService(ResumeUploadService resumeUploadService,
                             ScoringEngine scoringEngine,
                             ResumeAnalysisRepository analysisRepository,
-                            DocumentProcessingLockRegistry lockRegistry,
+                            AdvisoryLockService advisoryLockService,
                             UsageService usageService,
                             UserRepository userRepository,
                             AnalyticsService analyticsService) {
         this.resumeUploadService = resumeUploadService;
         this.scoringEngine = scoringEngine;
         this.analysisRepository = analysisRepository;
-        this.lockRegistry = lockRegistry;
+        this.advisoryLockService = advisoryLockService;
         this.usageService = usageService;
         this.userRepository = userRepository;
         this.analyticsService = analyticsService;
@@ -51,62 +50,56 @@ public class AnalysisService {
 
     @Transactional
     public AnalysisResponse analyze(UUID userId, UUID documentId) {
-        ReentrantLock lock = lockRegistry.lockFor(documentId);
-        if (!lock.tryLock()) {
+        if (!advisoryLockService.tryAcquireForTransaction(documentId)) {
             throw new ApiException(HttpStatus.CONFLICT, "ANALYSIS_IN_PROGRESS",
                     "An analysis for this resume is already running. Please wait for it to finish.");
         }
 
-        try {
-            ResumeDocument document = resumeUploadService.getOwnedDocument(documentId, userId);
+        ResumeDocument document = resumeUploadService.getOwnedDocument(documentId, userId);
 
-            if (document.getStatus() != ResumeDocument.Status.PARSED
-                    && document.getStatus() != ResumeDocument.Status.ANALYZED) {
-                throw new ApiException(HttpStatus.UNPROCESSABLE_ENTITY, "NOT_READY",
-                        "This resume has not been successfully parsed yet and cannot be analyzed.");
-            }
-
-            User user = userRepository.findById(userId)
-                    .orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "UNAUTHENTICATED", "Account not found"));
-            usageService.checkAndIncrement(userId, user.getPlan(), UsageService.UsageType.ANALYSIS);
-
-            String text = document.getExtractedText();
-            int parsingConfidence = document.getParsingConfidence() == null ? 0 : document.getParsingConfidence();
-            boolean likelyImageOnly = parsingConfidence < 40;
-            List<String> parsingIssues = resumeUploadService.readParsingIssues(document);
-
-            ScoringEngine.ScoreBreakdown breakdown = scoringEngine.score(text, parsingConfidence, parsingIssues, likelyImageOnly);
-
-            String issuesJson = writeJson(breakdown.issues());
-            String sectionsJson = writeJson(breakdown.detectedSections());
-
-            ResumeAnalysis analysis = ResumeAnalysis.builder()
-                    .documentId(documentId)
-                    .resumeId(document.getResumeId())
-                    .userId(userId)
-                    .overallScore(breakdown.overallScore())
-                    .atsParsingScore(breakdown.atsParsingScore())
-                    .keywordAlignmentScore(breakdown.keywordAlignmentScore())
-                    .structureScore(breakdown.structureScore())
-                    .contentQualityScore(breakdown.contentQualityScore())
-                    .experienceRelevanceScore(breakdown.experienceRelevanceScore())
-                    .impactScore(breakdown.impactScore())
-                    .formattingScore(breakdown.formattingScore())
-                    .issuesJson(issuesJson)
-                    .detectedSectionsJson(sectionsJson)
-                    .build();
-
-            analysisRepository.save(analysis);
-
-            document.setStatus(ResumeDocument.Status.ANALYZED);
-
-            analyticsService.record(userId, "resume_analyzed");
-
-            return toResponse(analysis, breakdown);
-        } finally {
-            lock.unlock();
-            lockRegistry.release(documentId, lock);
+        if (document.getStatus() != ResumeDocument.Status.PARSED
+                && document.getStatus() != ResumeDocument.Status.ANALYZED) {
+            throw new ApiException(HttpStatus.UNPROCESSABLE_ENTITY, "NOT_READY",
+                    "This resume has not been successfully parsed yet and cannot be analyzed.");
         }
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "UNAUTHENTICATED", "Account not found"));
+        usageService.checkAndIncrement(userId, user.getPlan(), UsageService.UsageType.ANALYSIS);
+
+        String text = document.getExtractedText();
+        int parsingConfidence = document.getParsingConfidence() == null ? 0 : document.getParsingConfidence();
+        boolean likelyImageOnly = parsingConfidence < 40;
+        List<String> parsingIssues = resumeUploadService.readParsingIssues(document);
+
+        ScoringEngine.ScoreBreakdown breakdown = scoringEngine.score(text, parsingConfidence, parsingIssues, likelyImageOnly);
+
+        String issuesJson = writeJson(breakdown.issues());
+        String sectionsJson = writeJson(breakdown.detectedSections());
+
+        ResumeAnalysis analysis = ResumeAnalysis.builder()
+                .documentId(documentId)
+                .resumeId(document.getResumeId())
+                .userId(userId)
+                .overallScore(breakdown.overallScore())
+                .atsParsingScore(breakdown.atsParsingScore())
+                .keywordAlignmentScore(breakdown.keywordAlignmentScore())
+                .structureScore(breakdown.structureScore())
+                .contentQualityScore(breakdown.contentQualityScore())
+                .experienceRelevanceScore(breakdown.experienceRelevanceScore())
+                .impactScore(breakdown.impactScore())
+                .formattingScore(breakdown.formattingScore())
+                .issuesJson(issuesJson)
+                .detectedSectionsJson(sectionsJson)
+                .build();
+
+        analysisRepository.save(analysis);
+
+        document.setStatus(ResumeDocument.Status.ANALYZED);
+
+        analyticsService.record(userId, "resume_analyzed");
+
+        return toResponse(analysis, breakdown);
     }
 
     public AnalysisResponse getLatestForDocument(UUID userId, UUID documentId) {

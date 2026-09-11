@@ -11,10 +11,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.locks.ReentrantLock;
 
 @Service
 public class ResumeDeletionService {
@@ -22,16 +20,16 @@ public class ResumeDeletionService {
     private final ResumeRepository resumeRepository;
     private final ResumeDocumentRepository resumeDocumentRepository;
     private final StorageService storageService;
-    private final DocumentProcessingLockRegistry lockRegistry;
+    private final AdvisoryLockService advisoryLockService;
 
     public ResumeDeletionService(ResumeRepository resumeRepository,
                                   ResumeDocumentRepository resumeDocumentRepository,
                                   StorageService storageService,
-                                  DocumentProcessingLockRegistry lockRegistry) {
+                                  AdvisoryLockService advisoryLockService) {
         this.resumeRepository = resumeRepository;
         this.resumeDocumentRepository = resumeDocumentRepository;
         this.storageService = storageService;
-        this.lockRegistry = lockRegistry;
+        this.advisoryLockService = advisoryLockService;
     }
 
     @Transactional
@@ -43,33 +41,23 @@ public class ResumeDeletionService {
 
         List<ResumeDocument> documents = resumeDocumentRepository.findByResumeIdAndUserId(resumeId, userId);
 
-        List<ReentrantLock> acquiredLocks = new ArrayList<>();
-        try {
-            for (ResumeDocument document : documents) {
-                ReentrantLock lock = lockRegistry.lockFor(document.getId());
-                if (!lock.tryLock()) {
-                    throw new ApiException(HttpStatus.CONFLICT, "PROCESSING_IN_PROGRESS",
-                            "This resume is currently being analyzed. Please try deleting it again in a moment.");
-                }
-                acquiredLocks.add(lock);
-            }
-
-            for (ResumeDocument document : documents) {
-                if (document.getDeletedAt() == null) {
-                    storageService.delete(document.getStorageKey());
-                    document.setDeletedAt(Instant.now());
-                    resumeDocumentRepository.save(document);
-                }
-            }
-
-            resume.setDeletedAt(Instant.now());
-            resumeRepository.save(resume);
-        } finally {
-            for (int i = 0; i < acquiredLocks.size(); i++) {
-                acquiredLocks.get(i).unlock();
-                lockRegistry.release(documents.get(i).getId(), acquiredLocks.get(i));
+        for (ResumeDocument document : documents) {
+            if (!advisoryLockService.tryAcquireForTransaction(document.getId())) {
+                throw new ApiException(HttpStatus.CONFLICT, "PROCESSING_IN_PROGRESS",
+                        "This resume is currently being analyzed. Please try deleting it again in a moment.");
             }
         }
+
+        for (ResumeDocument document : documents) {
+            if (document.getDeletedAt() == null) {
+                storageService.delete(document.getStorageKey());
+                document.setDeletedAt(Instant.now());
+                resumeDocumentRepository.save(document);
+            }
+        }
+
+        resume.setDeletedAt(Instant.now());
+        resumeRepository.save(resume);
     }
 }
 

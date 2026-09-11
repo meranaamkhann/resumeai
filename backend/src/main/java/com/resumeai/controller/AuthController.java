@@ -4,6 +4,8 @@ import com.resumeai.dto.AuthResponse;
 import com.resumeai.dto.LoginRequest;
 import com.resumeai.dto.RefreshRequest;
 import com.resumeai.dto.RegisterRequest;
+import com.resumeai.dto.RequestPasswordResetRequest;
+import com.resumeai.dto.ResetPasswordRequest;
 import com.resumeai.service.AuthService;
 import com.resumeai.service.RateLimiterService;
 import com.resumeai.util.ClientIpResolver;
@@ -47,6 +49,26 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(@Valid @RequestBody RefreshRequest request) {
         authService.logout(request.refreshToken());
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/verify-email")
+    public ResponseEntity<Void> verifyEmail(@RequestParam String token) {
+        authService.verifyEmail(token);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/request-password-reset")
+    public ResponseEntity<Void> requestPasswordReset(@Valid @RequestBody RequestPasswordResetRequest request, HttpServletRequest httpRequest) {
+        rateLimiterService.checkAuth(clientIpResolver.resolve(httpRequest));
+        authService.requestPasswordReset(request.email());
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<Void> resetPassword(@Valid @RequestBody ResetPasswordRequest request, HttpServletRequest httpRequest) {
+        rateLimiterService.checkAuth(clientIpResolver.resolve(httpRequest));
+        authService.resetPassword(request);
         return ResponseEntity.noContent().build();
     }
 }

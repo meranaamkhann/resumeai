@@ -13,12 +13,12 @@ import com.resumeai.exception.ResourceNotFoundException;
 import com.resumeai.repository.JobDescriptionRepository;
 import com.resumeai.repository.JobMatchRepository;
 import com.resumeai.repository.UserRepository;
+import com.resumeai.service.AnalyticsService;
 import com.resumeai.service.ResumeUploadService;
 import com.resumeai.service.billing.UsageService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.resumeai.service.AnalyticsService;   
 
 import java.util.List;
 import java.util.UUID;

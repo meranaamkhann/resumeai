@@ -1,6 +1,17 @@
 spring:
   application:
     name: resume-intelligence
+  mail:
+    host: ${SMTP_HOST:}
+    port: ${SMTP_PORT:587}
+    username: ${SMTP_USERNAME:}
+    password: ${SMTP_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/resumeai}
     username: ${DB_USERNAME:resumeai}
@@ -27,6 +38,13 @@ server:
     include-message: never
 
 app:
+  frontend-base-url: ${FRONTEND_BASE_URL:http://localhost:5173}
+  email:
+    provider: ${EMAIL_PROVIDER:none}
+    from-address: ${EMAIL_FROM_ADDRESS:noreply@resumeai.local}
+  ocr:
+    provider: ${OCR_PROVIDER:none}
+    tessdata-path: ${OCR_TESSDATA_PATH:}
   security:
     trust-proxy-headers: ${TRUST_PROXY_HEADERS:false}
   jwt:

@@ -20,6 +20,24 @@
 
 html { color-scheme: light; }
 
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  background: var(--ink);
+  color: var(--paper-raised);
+  padding: 0.75rem 1.2rem;
+  z-index: 1000;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  text-decoration: none;
+}
+
+.skip-link:focus {
+  left: 1rem;
+  top: 1rem;
+}
+
 body {
   margin: 0;
   background: var(--paper);

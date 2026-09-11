@@ -1,0 +1,101 @@
+spring:
+  application:
+    name: resume-intelligence
+  mail:
+    host: ${SMTP_HOST:}
+    port: ${SMTP_PORT:587}
+    username: ${SMTP_USERNAME:}
+    password: ${SMTP_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/resumeai}
+    username: ${DB_USERNAME:resumeai}
+    password: ${DB_PASSWORD:changeme}
+    hikari:
+      maximum-pool-size: 10
+  jpa:
+    hibernate:
+      ddl-auto: validate   # migrations own the schema, app never auto-mutates it
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  servlet:
+    multipart:
+      max-file-size: ${MAX_FILE_SIZE_MB:10}MB
+      max-request-size: ${MAX_FILE_SIZE_MB:10}MB
+
+server:
+  port: ${PORT:8080}
+  error:
+    include-stacktrace: never
+    include-message: never
+
+app:
+  frontend-base-url: ${FRONTEND_BASE_URL:http://localhost:5173}
+  email:
+    provider: ${EMAIL_PROVIDER:none}
+    from-address: ${EMAIL_FROM_ADDRESS:noreply@resumeai.local}
+  ocr:
+    provider: ${OCR_PROVIDER:none}
+    tessdata-path: ${OCR_TESSDATA_PATH:}
+  security:
+    trust-proxy-headers: ${TRUST_PROXY_HEADERS:false}
+  jwt:
+    secret: ${JWT_SECRET}          # required, no default — fail fast if unset in prod
+    access-token-ttl-minutes: ${JWT_ACCESS_TTL_MIN:15}
+    refresh-token-ttl-days: ${JWT_REFRESH_TTL_DAYS:7}
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
+  upload:
+    max-file-size-mb: ${MAX_FILE_SIZE_MB:10}
+    allowed-extensions: pdf,docx,txt
+    storage-dir: ${STORAGE_DIR:./storage/resumes}
+    retention-days: ${RESUME_RETENTION_DAYS:365}
+  ai:
+    provider: ${AI_PROVIDER:none}   # none | gemini | openai — see AiAnalysisService
+    api-key: ${AI_API_KEY:}
+    request-timeout-ms: ${AI_TIMEOUT_MS:15000}
+  rate-limit:
+    upload-per-minute: ${RATE_LIMIT_UPLOAD_PER_MIN:5}
+    analysis-per-minute: ${RATE_LIMIT_ANALYSIS_PER_MIN:5}
+    auth-per-minute: ${RATE_LIMIT_AUTH_PER_MIN:10}
+  scoring:
+    weights:
+      ats-parsing: ${WEIGHT_ATS_PARSING:20}
+      keyword-alignment: ${WEIGHT_KEYWORD:20}
+      structure: ${WEIGHT_STRUCTURE:15}
+      content-quality: ${WEIGHT_CONTENT:15}
+      experience-relevance: ${WEIGHT_EXPERIENCE:10}
+      impact-quality: ${WEIGHT_IMPACT:10}
+      formatting: ${WEIGHT_FORMATTING:10}
+    parsing-confidence-warn-threshold: ${PARSING_CONFIDENCE_WARN:70}
+  usage:
+    free-analyses-per-month: ${FREE_ANALYSES_PER_MONTH:10}
+    free-jd-matches-per-month: ${FREE_JD_MATCHES_PER_MONTH:5}
+    free-optimizations-per-month: ${FREE_OPTIMIZATIONS_PER_MONTH:10}
+  payments:
+    provider: ${PAYMENT_PROVIDER:none}
+    webhook-secret: ${PAYMENT_WEBHOOK_SECRET:}
+
+logging:
+  level:
+    root: INFO
+    com.resumeai: INFO
+  pattern:
+    console: "%d{ISO8601} [%X{requestId}] %-5level %logger{36} - %msg%n"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never

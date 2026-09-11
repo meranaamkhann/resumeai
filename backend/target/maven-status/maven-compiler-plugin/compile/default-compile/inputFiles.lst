@@ -26,14 +26,18 @@ C:\Asad Khan\Projects\resumeai\backend\src\main\java\com\resumeai\dto\PlanStatus
 C:\Asad Khan\Projects\resumeai\backend\src\main\java\com\resumeai\dto\RecruiterViewResponse.java
 C:\Asad Khan\Projects\resumeai\backend\src\main\java\com\resumeai\dto\RefreshRequest.java
 C:\Asad Khan\Projects\resumeai\backend\src\main\java\com\resumeai\dto\RegisterRequest.java
+C:\Asad Khan\Projects\resumeai\backend\src\main\java\com\resumeai\dto\RequestPasswordResetRequest.java
+C:\Asad Khan\Projects\resumeai\backend\src\main\java\com\resumeai\dto\ResetPasswordRequest.java
 C:\Asad Khan\Projects\resumeai\backend\src\main\java\com\resumeai\dto\ResumeUploadResponse.java
 C:\Asad Khan\Projects\resumeai\backend\src\main\java\com\resumeai\dto\ResumeVersionRequest.java
 C:\Asad Khan\Projects\resumeai\backend\src\main\java\com\resumeai\dto\ResumeVersionResponse.java
 C:\Asad Khan\Projects\resumeai\backend\src\main\java\com\resumeai\dto\ScoreComparisonResponse.java
 C:\Asad Khan\Projects\resumeai\backend\src\main\java\com\resumeai\entity\AnalyticsEvent.java
 C:\Asad Khan\Projects\resumeai\backend\src\main\java\com\resumeai\entity\Application.java
+C:\Asad Khan\Projects\resumeai\backend\src\main\java\com\resumeai\entity\EmailVerificationToken.java
 C:\Asad Khan\Projects\resumeai\backend\src\main\java\com\resumeai\entity\JobDescription.java
 C:\Asad Khan\Projects\resumeai\backend\src\main\java\com\resumeai\entity\JobMatch.java
+C:\Asad Khan\Projects\resumeai\backend\src\main\java\com\resumeai\entity\PasswordResetToken.java
 C:\Asad Khan\Projects\resumeai\backend\src\main\java\com\resumeai\entity\ProcessedWebhookEvent.java
 C:\Asad Khan\Projects\resumeai\backend\src\main\java\com\resumeai\entity\RefreshToken.java
 C:\Asad Khan\Projects\resumeai\backend\src\main\java\com\resumeai\entity\Resume.java
@@ -49,8 +53,10 @@ C:\Asad Khan\Projects\resumeai\backend\src\main\java\com\resumeai\exception\Rate
 C:\Asad Khan\Projects\resumeai\backend\src\main\java\com\resumeai\exception\ResourceNotFoundException.java
 C:\Asad Khan\Projects\resumeai\backend\src\main\java\com\resumeai\repository\AnalyticsEventRepository.java
 C:\Asad Khan\Projects\resumeai\backend\src\main\java\com\resumeai\repository\ApplicationRepository.java
+C:\Asad Khan\Projects\resumeai\backend\src\main\java\com\resumeai\repository\EmailVerificationTokenRepository.java
 C:\Asad Khan\Projects\resumeai\backend\src\main\java\com\resumeai\repository\JobDescriptionRepository.java
 C:\Asad Khan\Projects\resumeai\backend\src\main\java\com\resumeai\repository\JobMatchRepository.java
+C:\Asad Khan\Projects\resumeai\backend\src\main\java\com\resumeai\repository\PasswordResetTokenRepository.java
 C:\Asad Khan\Projects\resumeai\backend\src\main\java\com\resumeai\repository\ProcessedWebhookEventRepository.java
 C:\Asad Khan\Projects\resumeai\backend\src\main\java\com\resumeai\repository\RefreshTokenRepository.java
 C:\Asad Khan\Projects\resumeai\backend\src\main\java\com\resumeai\repository\ResumeAnalysisRepository.java
@@ -64,6 +70,8 @@ C:\Asad Khan\Projects\resumeai\backend\src\main\java\com\resumeai\security\Authe
 C:\Asad Khan\Projects\resumeai\backend\src\main\java\com\resumeai\security\CurrentUser.java
 C:\Asad Khan\Projects\resumeai\backend\src\main\java\com\resumeai\security\JwtAuthFilter.java
 C:\Asad Khan\Projects\resumeai\backend\src\main\java\com\resumeai\security\JwtService.java
+C:\Asad Khan\Projects\resumeai\backend\src\main\java\com\resumeai\security\OpaqueTokenGenerator.java
+C:\Asad Khan\Projects\resumeai\backend\src\main\java\com\resumeai\service\AdvisoryLockService.java
 C:\Asad Khan\Projects\resumeai\backend\src\main\java\com\resumeai\service\ai\AiAnalysisService.java
 C:\Asad Khan\Projects\resumeai\backend\src\main\java\com\resumeai\service\ai\BulletRewriteService.java
 C:\Asad Khan\Projects\resumeai\backend\src\main\java\com\resumeai\service\ai\FactualConsistencyGuard.java
@@ -88,6 +96,9 @@ C:\Asad Khan\Projects\resumeai\backend\src\main\java\com\resumeai\service\billin
 C:\Asad Khan\Projects\resumeai\backend\src\main\java\com\resumeai\service\billing\UsageService.java
 C:\Asad Khan\Projects\resumeai\backend\src\main\java\com\resumeai\service\DashboardService.java
 C:\Asad Khan\Projects\resumeai\backend\src\main\java\com\resumeai\service\DocumentProcessingLockRegistry.java
+C:\Asad Khan\Projects\resumeai\backend\src\main\java\com\resumeai\service\email\ConsoleEmailSender.java
+C:\Asad Khan\Projects\resumeai\backend\src\main\java\com\resumeai\service\email\EmailSender.java
+C:\Asad Khan\Projects\resumeai\backend\src\main\java\com\resumeai\service\email\SmtpEmailSender.java
 C:\Asad Khan\Projects\resumeai\backend\src\main\java\com\resumeai\service\export\ExportService.java
 C:\Asad Khan\Projects\resumeai\backend\src\main\java\com\resumeai\service\FileSecurityService.java
 C:\Asad Khan\Projects\resumeai\backend\src\main\java\com\resumeai\service\matching\JobDescriptionParser.java
@@ -95,6 +106,7 @@ C:\Asad Khan\Projects\resumeai\backend\src\main\java\com\resumeai\service\matchi
 C:\Asad Khan\Projects\resumeai\backend\src\main\java\com\resumeai\service\matching\JobMatchService.java
 C:\Asad Khan\Projects\resumeai\backend\src\main\java\com\resumeai\service\ocr\NoopOcrService.java
 C:\Asad Khan\Projects\resumeai\backend\src\main\java\com\resumeai\service\ocr\OcrService.java
+C:\Asad Khan\Projects\resumeai\backend\src\main\java\com\resumeai\service\ocr\TesseractOcrService.java
 C:\Asad Khan\Projects\resumeai\backend\src\main\java\com\resumeai\service\parsing\DocxTextExtractor.java
 C:\Asad Khan\Projects\resumeai\backend\src\main\java\com\resumeai\service\parsing\ParsingConfidenceCalculator.java
 C:\Asad Khan\Projects\resumeai\backend\src\main\java\com\resumeai\service\parsing\ParsingTimeoutGuard.java

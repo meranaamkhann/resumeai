@@ -1,6 +1,3 @@
-
-backend/target/
-
 # Environment / secrets
 .env
 .env.local

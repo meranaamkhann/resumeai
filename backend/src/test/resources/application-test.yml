@@ -1,0 +1,48 @@
+app:
+  jwt:
+    secret: test-secret-key-for-integration-tests-only-never-use-this-in-production-1234567890
+    access-token-ttl-minutes: 15
+    refresh-token-ttl-days: 7
+  frontend-base-url: http://localhost:5175
+  cors:
+    allowed-origins: http://localhost:5175
+  upload:
+    max-file-size-mb: 10
+    storage-dir: ./target/test-storage
+  ai:
+    provider: none
+    api-key:
+    request-timeout-ms: 15000
+  payments:
+    provider: none
+    webhook-secret:
+  email:
+    provider: none
+    from-address: noreply@resumeai.local
+  ocr:
+    provider: none
+    tessdata-path:
+  rate-limit:
+    upload-per-minute: 1000
+    analysis-per-minute: 1000
+    auth-per-minute: 1000
+  usage:
+    free-analyses-per-month: 1000
+    free-jd-matches-per-month: 1000
+    free-optimizations-per-month: 1000
+  scoring:
+    weights:
+      ats-parsing: 20
+      keyword-alignment: 20
+      structure: 15
+      content-quality: 15
+      experience-relevance: 10
+      impact-quality: 10
+      formatting: 10
+    parsing-confidence-warn-threshold: 70
+
+spring:
+  datasource:
+    url: ${TEST_DB_URL:jdbc:postgresql://localhost:5432/resumeai_test}
+    username: ${TEST_DB_USERNAME:postgres}
+    password: ${TEST_DB_PASSWORD:postgres}

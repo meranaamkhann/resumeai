@@ -18,6 +18,7 @@ Going in, 10 gaps were identified. Here's the honest status of each:
 | 8 | Docker build never verified end-to-end | **Config bugs fixed, but still not executable from this environment** (no Docker daemon available here). Fixed: `docker-compose.yml` now has a real Postgres healthcheck with `depends_on: condition: service_healthy` (previously Flyway could race Postgres startup), and all ports are now configurable via `.env` with collision-resistant defaults — directly informed by the exact port conflicts hit during manual setup in this conversation (5432, 8080, and 5173 were all already taken by other local projects). You should still run `docker compose up --build` yourself once to confirm it actually builds clean end to end. |
 | 9 | No email verification / password reset | **Fully implemented** — real token-based flows (hashed opaque tokens, 24h/1h expiry, single-use), a pluggable `EmailSender` (console-log by default, real SMTP via `EMAIL_PROVIDER=smtp`), and matching frontend pages (`/verify-email`, `/forgot-password`, `/reset-password`). |
 | 10 | Frontend polish / accessibility | **Partially addressed** — added a skip-to-content link, `role="alert"`/`role="status"` on error and success messages so screen readers announce them, and completed the previously-missing password-reset UI. A full WCAG audit was not performed — that's a bigger, more manual effort than a code pass can respond to honestly. |
+| 11 | No test catches real wiring/dependency bugs before runtime | **Fixed** — added `AuthFlowIntegrationTest`, a full-context integration test that boots real Spring Boot against real Postgres and runs actual HTTP requests through the whole security chain. Wired into CI with a disposable Postgres service. This is the test that would have caught every one of the ~6 live startup bugs hit during this project's actual manual setup automatically. |
 
 ## Architecture
 
@@ -37,19 +38,21 @@ backend/    Spring Boot 3 (Java 17), PostgreSQL, Flyway migrations
 ```
 cd backend
 cp .env.example .env   # fill in JWT_SECRET at minimum: openssl rand -base64 64
-export $(cat .env | xargs)   # PowerShell users: set each $env:VAR manually, see below
+export $(cat .env | xargs)
 mvn clean spring-boot:run
 ```
 
-**Windows PowerShell users:** `.env` files aren't auto-loaded. Set each variable explicitly in the same terminal session before running Maven:
+**Windows PowerShell users:** `.env` files aren't auto-loaded by Maven, and `$env:` variables don't persist between terminal sessions — this bit us repeatedly during actual setup. Use the included launcher instead of retyping variables every time:
 ```powershell
-$env:JWT_SECRET="..."
-$env:DB_URL="jdbc:postgresql://localhost:5434/resumeai"
-$env:DB_USERNAME="resumeai"
-$env:DB_PASSWORD="changeme"
-mvn clean spring-boot:run
+cd backend
+copy .env.example .env
+notepad .env   # fill in real values
+Set-ExecutionPolicy -Scope CurrentUser RemoteSigned   # one-time, allows the script to run
+.\run.ps1
 ```
-If port 5432/8080/5173 are already taken by another local project (common if you have multiple Spring Boot projects checked out), pick different host ports — `docker-compose.yml` now defaults to 5434/8081/5175 specifically to avoid this.
+`run.ps1` reads `.env`, sets each variable for that process only (never touches your permanent system environment), then runs `mvn spring-boot:run`. From then on, `.\run.ps1` is the only command you need to start the backend.
+
+If port 5432/8080/5173 are already taken by another local project (common if you have multiple Spring Boot projects checked out), pick different host ports in `.env` — the defaults are 5434/8081/5175 specifically to avoid this, based on exact collisions hit during real setup.
 
 ### Frontend
 ```
@@ -64,6 +67,18 @@ Update `frontend/vite.config.ts`'s proxy target if your backend isn't on the def
 cd backend
 mvn test
 ```
+Four of the test classes (file security, factual-consistency guard, scoring engine, job-match engine) are pure unit tests — no database needed, always run.
+
+One test class (`AuthFlowIntegrationTest`) boots the **real Spring context** and runs real Flyway migrations against a real Postgres database, then exercises actual HTTP requests (register → access a protected endpoint → refresh token → wrong-password rejection) through the full security chain. This is the test that would have caught every wiring bug hit during manual setup in this project's development (missing Bouncy Castle dependency, missing JdbcTemplate bean, the CORS/OPTIONS 403) automatically, before a human ever had to find it by trial and error.
+- **In CI**: runs automatically — GitHub Actions spins up a disposable Postgres service on port 5432, no setup needed.
+- **Locally**: needs a Postgres reachable at `localhost:5432` with a `resumeai_test` database and `postgres`/`postgres` credentials by default. If that collides with something else on your machine (as port 5432 did during actual setup of this project), override it:
+  ```powershell
+  $env:TEST_DB_URL="jdbc:postgresql://localhost:5434/resumeai_test"
+  $env:TEST_DB_USERNAME="resumeai"
+  $env:TEST_DB_PASSWORD="changeme"
+  mvn test
+  ```
+  (create the `resumeai_test` database first, e.g. `docker exec -it resumeai-db-1 createdb -U resumeai resumeai_test`)
 
 ### Docker
 ```

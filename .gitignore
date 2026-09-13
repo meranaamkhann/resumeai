@@ -1,7 +1,21 @@
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/tsconfig.tsbuildinfo
 
+# Backend
 backend/target/
 
-# Environment / secrets
+# Environment
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
